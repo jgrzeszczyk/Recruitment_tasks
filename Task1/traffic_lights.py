@@ -4,15 +4,16 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 
 class Worker(QObject):
-    def __init__(self, func):
+    def __init__(self, func, **kwargs):
         super().__init__()
         self.func = func
+        self.func_kwargs = kwargs
 
     finished = pyqtSignal()
 
     def run(self):
         """Long-running task."""
-        self.func()
+        self.func(self.func_kwargs)
         self.finished.emit()
 
 
