@@ -20,22 +20,16 @@ class Cell:
     def count_neighbours(self, board: np.array) -> int:
         """Counts neighbours surrounding the specific cell"""
 
-        # TODO: Try to merge below conditions
-        if self.row == 0:
-            count_rows = [board.shape[0] - 1, self.row, self.row + 1]
-        elif self.row == board.shape[0] - 1:
-            count_rows = [self.row - 1, self.row, 0]
-        else:
-            count_rows = [self.row - 1, self.row, self.row + 1]
+        row1 = board.shape[0] - 1 if self.row == 0 else self.row - 1
+        row3 = 0 if self.row == board.shape[0] - 1 else self.row + 1
 
-        if self.col == 0:
-            count_cols = [board.shape[1] - 1, self.col, self.col + 1]
-        elif self.col == board.shape[1] - 1:
-            count_cols = [self.col - 1, self.col, 0]
-        else:
-            count_cols = [self.col - 1, self.col, self.col + 1]
+        col1 = board.shape[1] - 1 if self.col == 0 else self.col - 1
+        col3 = 0 if self.col == board.shape[1] - 1 else self.col + 1
 
-        self.neighbours = np.array([[board[row, col].state for col in count_cols] for row in count_rows])
+        rows = [row1, self.row, row3]
+        cols = [col1, self.col, col3]
+
+        self.neighbours = np.array([[board[row, col].state for col in cols] for row in rows])
 
         return np.sum(self.neighbours) if self.state == 0 else (np.sum(self.neighbours) - 1)
 
@@ -43,15 +37,25 @@ class Cell:
 class GameEngine:
     def __init__(self, config_path: str):
         with open(config_path) as f:
-            config = json.load(f)
+            self.config = json.load(f)
 
-        self.init_array = np.array(config['initial_pose'])
+        self.validate_config()
+        self.init_array = np.array(self.config['initial_pose'])
         self.cells_board = np.array([[Cell(row, col, state=self.init_array[row, col])
                                       for col in range(self.init_array.shape[1])]
                                      for row in range(self.init_array.shape[0])], dtype='object')
         self.temp_board = deepcopy(self.cells_board)
-        self.refresh_rate = config['refresh_rate']
+        self.refresh_rate = self.config['refresh_rate']
         self.running = False
+
+    def validate_config(self) -> None:
+        """Validates game config"""
+        if 'initial_pose' not in self.config.keys() or 'refresh_rate' not in self.config.keys():
+            raise Exception('Config file should contain initial_pose and refresh_rate keys!')
+        elif not isinstance(self.config['initial_pose'], list):
+            raise Exception(f'Initial pose array should be of type: list, not {type(self.config["initial_pose"])}')
+        elif not isinstance(self.config['refresh_rate'], int):
+            raise Exception(f'Refresh rate should be of type int, not {self.config["refresh_rate"]}')
 
     def compute_iter(self) -> None:
         """Computes game iteration"""
