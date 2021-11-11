@@ -1,6 +1,6 @@
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QPushButton, QButtonGroup, QMainWindow
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QObject, pyqtSignal
 
 
 class Worker(QObject):
@@ -25,7 +25,6 @@ class TrafficLight:
         self.pedestrian_light = 'green'
         self.run_time = 0
         self.init_time = datetime.now()
-        self.worker = Worker(func=self.run)
 
     def change_lights(self, state) -> None:
         """Changes lights' colors according to current state"""
@@ -40,7 +39,7 @@ class TrafficLight:
         self.state = state
         self.car_light = lights_states[self.state]['car_light']
         self.pedestrian_light = lights_states[self.state]['pedestrian_light']
-        self.update_state_info()
+        # self.state_info()
 
     def change_state(self, dst_state: int, delay: int) -> None:
         """Changes state to dst_state after passed delay time"""
@@ -57,79 +56,34 @@ class TrafficLight:
         self.run_time = (datetime.now() - self.init_time).seconds
         self.change_lights(state=self.state)
 
-    def run(self) -> None:
+    def run(self, args=None) -> None:
         """Runs state machine algorithm"""
+        update_logs_func = args['update_logs_func']
         while True:
             self.run_time = (datetime.now() - self.init_time).seconds
             self.change_state(dst_state=2, delay=10)
+            update_logs_func(data=self.state_info())
             self.change_state(dst_state=3, delay=20)
+            update_logs_func(data=self.state_info())
             self.change_state(dst_state=1, delay=2)
+            update_logs_func(data=self.state_info())
 
-    def update_state_info(self) -> None:
-        """Prints current state information"""
-        print(f'{self.run_time} seconds | State {self.state} -> '
-              f'Pedestrian light: {self.pedestrian_light}'
-              f' | Car light: {self.car_light}')
+    def state_info(self) -> str:
+        """Returns current state information"""
+        return (f'{self.run_time} seconds | State {self.state} -> '
+                f'Pedestrian light: {self.pedestrian_light}'
+                f' | Car light: {self.car_light}')
 
 
-class LightsGUI(QMainWindow):
-    def __init__(self, engine: TrafficLight):
-        super().__init__()
-        self.setGeometry(30, 30, 400, 200)
-        self.init_ui()
-        self.engine = engine
-
-    def init_ui(self) -> None:
-        """GUI initialization"""
-        self.button1 = QPushButton(self)
-        self.button1.setGeometry(40, 40, 120, 50)
-        self.button1.setText("Start")
-
-        self.button2 = QPushButton(self)
-        self.button2.setGeometry(200, 40, 120, 50)
-        self.button2.setText("Pedestrian btn")
-
-        self.btn_grp = QButtonGroup()
-        self.btn_grp.setExclusive(True)
-        self.btn_grp.addButton(self.button1)
-        self.btn_grp.addButton(self.button2)
-
-        self.btn_grp.buttonClicked.connect(self.on_click)
-
-        # TODO: Add text box for logs inside GUI
-
-        self.show()
-
-    def on_click(self, btn: QPushButton) -> None:
-        if btn.text() == 'Start':
-            print('System started!')
-            self.button1.setEnabled(False)
-            self.run_state_machine()
-        elif btn.text() == 'Pedestrian btn':
-            self.engine.pedestrian_btn = True
-
-    def run_state_machine(self) -> None:
-        """Threading to avoid GUI freezing"""
-
-        # Create a QThread object
-        self.thread = QThread()
-        #  Create a worker object
-        self.worker = self.engine.worker
-        # Move worker to the thread
-        self.worker.moveToThread(self.thread)
-        # Connect signals and slots
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        # Start the thread
-        self.thread.start()
+def run_gui(engine):
+    from lights_gui import LightsGUI
+    ex = LightsGUI(engine=engine)
 
 
 def main():
-    light = TrafficLight()
+    engine = TrafficLight()
     app = QApplication([])
-    ex = LightsGUI(engine=light)
+    run_gui(engine)
     app.exec()
 
 
