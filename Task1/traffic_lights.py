@@ -1,30 +1,16 @@
 from datetime import datetime
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QObject, pyqtSignal
-
-
-class Worker(QObject):
-    def __init__(self, func, **kwargs):
-        super().__init__()
-        self.func = func
-        self.func_kwargs = kwargs
-
-    finished = pyqtSignal()
-
-    def run(self):
-        """Long-running task."""
-        self.func(self.func_kwargs)
-        self.finished.emit()
 
 
 class TrafficLight:
-    def __init__(self):
+    def __init__(self, console_logs=False):
         self.state = 1
         self.pedestrian_btn = False
         self.car_light = 'red'
         self.pedestrian_light = 'green'
         self.run_time = 0
         self.init_time = datetime.now()
+        self.console_logs = console_logs
 
     def change_lights(self, state) -> None:
         """Changes lights' colors according to current state"""
@@ -39,7 +25,8 @@ class TrafficLight:
         self.state = state
         self.car_light = lights_states[self.state]['car_light']
         self.pedestrian_light = lights_states[self.state]['pedestrian_light']
-        # self.state_info()
+        if self.console_logs:
+            print(self.state_info())
 
     def change_state(self, dst_state: int, delay: int) -> None:
         """Changes state to dst_state after passed delay time"""
@@ -81,7 +68,8 @@ def run_gui(engine):
 
 
 def main():
-    engine = TrafficLight()
+    # TO ENABLE CONSOLE LOGS CHANGE console_logs argument below to True
+    engine = TrafficLight(console_logs=True)
     app = QApplication([])
     run_gui(engine)
     app.exec()
