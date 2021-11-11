@@ -1,6 +1,7 @@
-from PyQt5.QtCore import QThread, Qt
-from PyQt5.QtWidgets import QPushButton, QButtonGroup, QVBoxLayout, QGroupBox,  QGridLayout, QDialog, QTextEdit
-from traffic_lights import Worker, TrafficLight
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QPushButton, QButtonGroup, QVBoxLayout, QGroupBox, QGridLayout, QDialog, QTextEdit
+from traffic_lights import TrafficLight
+from Utils.utils import Worker, CustomThread
 
 
 class LightsGUI(QDialog):
@@ -11,6 +12,7 @@ class LightsGUI(QDialog):
         self.init_ui()
         self.engine = engine
         self.worker = Worker(func=self.engine.run, update_logs_func=self.update_console_logs)
+        self.threading = CustomThread(worker=self.worker)
 
     def init_ui(self) -> None:
         """GUI initialization"""
@@ -55,26 +57,9 @@ class LightsGUI(QDialog):
         if btn.text() == 'Start':
             print('System started!')
             self.start_btn.setEnabled(False)
-            self.run_state_machine()
+            self.threading.run_task()  # runs state machine
         elif btn.text() == 'Pedestrian btn':
             self.engine.pedestrian_btn = True
-
-    def run_state_machine(self) -> None:
-        """Threading to avoid GUI freezing"""
-
-        # Create a QThread object
-        self.thread = QThread()
-        #  Create a worker object
-        self.worker = self.worker
-        # Move worker to the thread
-        self.worker.moveToThread(self.thread)
-        # Connect signals and slots
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        # Start the thread
-        self.thread.start()
 
     def update_console_logs(self, data):
         self.info_area.append(data)

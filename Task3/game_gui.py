@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QDialog, QGroupBox, QGridL
 from PyQt5.QtCore import Qt, QSize, QThread
 import numpy as np
 
-from Task1.traffic_lights import Worker
+from Utils.utils import Worker, CustomThread
 from game_of_life import GameEngine
 
 
@@ -16,6 +16,7 @@ class GUI(QDialog):
         self.height = 150
         self.engine = GameEngine('./config.json', console_logs=console_logs)
         self.worker = Worker(self.engine.run, update_gui_func=self.update_grid_colors)
+        self.threading = CustomThread(worker=self.worker)
         self.init_ui()
 
     def init_ui(self):
@@ -52,7 +53,7 @@ class GUI(QDialog):
         if btn.text() == 'Start':
             self.start_button.setEnabled(False)
             self.engine.running = True
-            self.compute_iteration()
+            self.threading.run_task()  # runs iteration computation
 
     def update_grid_colors(self, iter_time):
         """Updates cells' colors according to the actual state"""
@@ -88,21 +89,3 @@ class GUI(QDialog):
         self.buttons = np.array(temp_buttons).reshape(self.engine.cells_board.shape[0],
                                                       self.engine.cells_board.shape[1])
         self.horizontal_group_box.setLayout(layout)
-
-    def compute_iteration(self) -> None:
-        """Threading to avoid GUI freezing"""
-
-        # Create a QThread object
-        self.thread = QThread()
-        #  Create a worker object
-        self.worker = self.worker
-        # Move worker to the thread
-        self.worker.moveToThread(self.thread)
-
-        # Connect signals and slots
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        # Start the thread
-        self.thread.start()
