@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Any
 import numpy as np
 from datetime import datetime
 from prettytable import PrettyTable
@@ -16,11 +16,11 @@ def calculate_square_root(params: dict,
     eps = params['epsilon']
     max_iters = params['max iterations']
     search_range = params['search range']
-    x1 = params['starting point']
+    x1 = params['start point']
 
     run_info = PrettyTable()
     run_info.title = f'Calculating square root of n={n} using {method} method'
-    run_info.field_names = ['Epsilon', 'Max iters', 'Starting Point', 'Search range']
+    run_info.field_names = ['Epsilon', 'Max iters', 'Start Point', 'Search range']
     run_info.add_row([eps, max_iters, x1, search_range])
     print(run_info)
 
@@ -56,7 +56,7 @@ def validate_search_range(n: Union[int, float], search_range: list):
     and if metod's conditon about sign is met"""
 
     n_in_range = search_range[0] <= square_root(n) <= search_range[1]
-    if (search_range[0]**2 - n) * (search_range[1]**2 - n) >= 0 or not n_in_range:
+    if (search_range[0] ** 2 - n) * (search_range[1] ** 2 - n) >= 0 or not n_in_range:
         raise Exception(f'Root in selected range {search_range} does not exist!')
     return True
 
@@ -78,25 +78,40 @@ def bisection_method(search_range: list) -> Union[float, int]:
 
 def collect_user_input() -> dict:
     """Collects input entered by user"""
-    n = float(input('Enter number for square root calculation: \n'))
+    n = input('Enter number for square root calculation: \n')
 
-    eps = float(input('Expected maximum error: \n'))
-    max_iter = float(input('Maximum number of iteratrions: \n'))
+    eps = input('Expected maximum error: \n')
+    max_iter = input('Maximum number of iteratrions: \n')
 
-    a, b = tuple(map(float, input('Enter search range separated by ",": \n').split(',')))
-    x1 = float(input('Enter starting point: \n'))
-    return {
-        'n': n,
-        'epsilon': eps,
-        'max iterations': max_iter,
-        'search range': [a, b],
-        'starting point': x1
-    }
+    try:
+        a, b = list(map(float, input('Enter search range separated by ",": \n').split(',')))
+    except ValueError:
+        raise Exception('Please enter two values of type int or float separated by "," for search range parameter')
+    x1 = input('Enter start point: \n')
+
+    data = {'n': n,
+            'epsilon': eps,
+            'max iterations': max_iter,
+            'start point': x1}
+    validate_user_input(data)
+    data['search range'] = [a, b]
+    return data
+
+
+def validate_int_or_float(x: Any, var_name: str) -> float:
+    try:
+        x = float(x)
+    except TypeError:
+        raise Exception(f'{var_name} should be of type int or float, '
+                        f'but found {type(x)}')
+    return x
 
 
 def validate_user_input(data: dict):
-    # TODO: implemend validation for user input data
-    raise NotImplementedError
+    parameters_names = ['Number for square root calculation', 'Maximum error', 'Number of max iterations',
+                        'Search range elements', 'Start point for the algorithm']
+    for param, param_name in zip(data.keys(), parameters_names):
+        data[param] = validate_int_or_float(data[param], param_name)
 
 
 def main():
