@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QDialog, QGroupBox, QGridLayout, QButtonGroup, QTextEdit
-from PyQt5.QtCore import Qt, QSize, QThread
+from PyQt5.QtCore import Qt, QSize
 import numpy as np
 
 from Utils.utils import Worker, CustomThread
@@ -23,7 +23,6 @@ class GUI(QDialog):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        self.vLayout = QVBoxLayout()
         self.create_grid_layout()
         window_layout = QVBoxLayout()
         window_layout.addWidget(self.horizontal_group_box)
@@ -59,7 +58,7 @@ class GUI(QDialog):
         """Updates cells' colors according to the actual state"""
         for row in range(self.buttons.shape[0]):
             for col in range(self.buttons.shape[1]):
-                color = 'black' if self.engine.cells_board[row, col].state == 1 else 'white'
+                color = 'black' if self.engine.cells_board.board[row, col].state == 1 else 'white'
                 self.buttons[row, col].setStyleSheet(f'background-color : {color}')
         self.info_area.append(f'Iter time: {iter_time} [\u03BCs]')
         self.info_area.ensureCursorVisible()
@@ -74,9 +73,9 @@ class GUI(QDialog):
 
         # Adding cells represented as non-clickable buttons to the layout
         temp_buttons = []
-        for row in range(self.engine.cells_board.shape[0]):
-            for col in range(self.engine.cells_board.shape[1]):
-                cell = self.engine.cells_board[row, col]
+        for row in range(self.engine.cells_board.board.shape[0]):
+            for col in range(self.engine.cells_board.board.shape[1]):
+                cell = self.engine.cells_board.board[row, col]
 
                 btn = QPushButton()
                 btn.setFixedSize(QSize(20, 20))
@@ -86,6 +85,6 @@ class GUI(QDialog):
                 layout.addWidget(btn, cell.row, cell.col)
                 temp_buttons.append(btn)
 
-        self.buttons = np.array(temp_buttons).reshape(self.engine.cells_board.shape[0],
-                                                      self.engine.cells_board.shape[1])
+        self.buttons = np.array(temp_buttons).reshape(self.engine.cells_board.board.shape[0],
+                                                      self.engine.cells_board.board.shape[1])
         self.horizontal_group_box.setLayout(layout)
