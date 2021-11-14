@@ -6,7 +6,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 
-from game_elements import Cell, Board
+from Task3.game_elements import Cell, Board
 
 
 class GameEngine:
@@ -14,7 +14,7 @@ class GameEngine:
         with open(config_path) as f:
             self.config = json.load(f)
 
-        self.validate_config()
+        assert self.validate_config()
         self.init_array = np.array(self.config['initial_pose'])
         self.refresh_rate = self.config['refresh_rate']
         self.cells_board = Board(self.init_array)
@@ -22,7 +22,7 @@ class GameEngine:
         self.running = False
         self.console_logs = console_logs
 
-    def validate_config(self) -> None:
+    def validate_config(self) -> bool:
         """Validates game config"""
         if 'initial_pose' not in self.config.keys() or 'refresh_rate' not in self.config.keys():
             raise Exception('Config file should contain initial_pose and refresh_rate keys!')
@@ -30,6 +30,8 @@ class GameEngine:
             raise Exception(f'Initial pose array should be of type: list, not {type(self.config["initial_pose"])}')
         if not isinstance(self.config['refresh_rate'], int):
             raise Exception(f'Refresh rate should be of type int, not {self.config["refresh_rate"]}')
+
+        return True
 
     def compute_iter(self) -> None:
         """Computes game iteration"""
