@@ -1,0 +1,4 @@
+pyqt5~=5.15.6
+numpy~=1.20.3
+prettytable~=2.4.0
+python~=3.9.7
