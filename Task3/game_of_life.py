@@ -57,6 +57,11 @@ class GameEngine:
 
     def apply_game_rules(self, neighbours_count: int, cell: Cell) -> None:
         """Apply Game Of Life main rules to current cells generation"""
+        # early termination condition
+        neighbours_changes = cell.neighbours == cell.prev_neighbors
+        if cell.state == cell.prev_state and not neighbours_changes.all():
+            return
+
         if neighbours_count in [2, 3] and cell.state == 1:
             self.temp_board.board[cell.row, cell.col].state = 1
         elif cell.state == 0 and neighbours_count == 3:
@@ -71,7 +76,7 @@ class GameEngine:
 
     def print_iter(self, elapsed_time: int) -> None:
         """Prints current iteration array and elapsed time"""
-        print(f'{self.cells_board} \n Iter time: {elapsed_time}')
+        print(f'{self.cells_board} \n Iter time: {elapsed_time} [\u03BCs]')
 
 
 def run_gui(console_logs):

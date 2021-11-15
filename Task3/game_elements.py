@@ -7,10 +7,14 @@ class Cell:
         self.row = row
         self.col = col
         self.state = state
+        self.prev_state = None
+        self.prev_neighbors = None
+        self.neighbours = None
 
     def count_neighbours(self, board: np.array) -> int:
         """Counts neighbours surrounding the specific cell"""
-
+        # save previous neighbours
+        self.prev_neighbors = self.neighbours
         # Periodic boundary conditions
         row1 = board.shape[0] - 1 if self.row == 0 else self.row - 1
         row3 = 0 if self.row == board.shape[0] - 1 else self.row + 1
@@ -22,7 +26,6 @@ class Cell:
         cols = [col1, self.col, col3]
 
         self.neighbours = np.array([[board[row, col].state for col in cols] for row in rows])
-
         return np.sum(self.neighbours) if self.state == 0 else (np.sum(self.neighbours) - 1)
 
 
